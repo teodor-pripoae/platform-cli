@@ -160,14 +160,17 @@ type NFS struct {
 }
 
 type Ldap struct {
-	Disabled   bool   `yaml:"disabled,omitempty"`
-	Host       string `yaml:"host,omitempty"`
-	Port       string `yaml:"port,omitempty"`
-	Username   string `yaml:"username,omitempty"`
-	Password   string `yaml:"password,omitempty"`
-	Domain     string `yaml:"domain,omitempty"`
-	AdminGroup string `yaml:"adminGroup,omitempty"`
-	BindDN     string `yaml:"dn,omitempty"`
+	Disabled         bool   `yaml:"disabled,omitempty"`
+	Host             string `yaml:"host,omitempty"`
+	Port             string `yaml:"port,omitempty"`
+	Username         string `yaml:"username,omitempty"`
+	Password         string `yaml:"password,omitempty"`
+	Domain           string `yaml:"domain,omitempty"`
+	AdminGroup       string `yaml:"adminGroup,omitempty"`
+	UserDN           string `yaml:"userDN,omitempty"`
+	GroupDN          string `yaml:"groupDN,omitempty"`
+	GroupObjectClass string `yaml:"groupObjectClass,omitempty"`
+	GroupNameAttr    string `yaml:"groupNameAttr,omitempty"`
 }
 
 type Kubernetes struct {
