@@ -16,9 +16,11 @@ func Install(platform *platform.Platform) error {
 		return nil
 	}
 
-	if err := platform.CreateOrUpdateNamespace(constants.PlatformSystem, map[string]string{
+	labels := map[string]string{
+		"control-plane":            "controller-manager",
 		"quack.pusher.com/enabled": "true",
-	}, platform.DefaultNamespaceAnnotations()); err != nil {
+	}
+	if err := platform.CreateOrUpdateNamespace(constants.PlatformSystem, labels, nil); err != nil {
 		return err
 	}
 
