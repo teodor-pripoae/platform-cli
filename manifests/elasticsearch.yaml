@@ -6,6 +6,8 @@ metadata:
   namespace: eck
 spec:
   version: {{.elasticsearch.version}}
+  secureSettings:
+    - secretName: elasticsearch-oidc-config
   nodeSets:
     - name: default
       count: {{.elasticsearch.replicas}}
@@ -16,6 +18,21 @@ spec:
         node.store.allow_mmap: false
         xpack.security.transport.ssl.supported_protocols: TLSv1.1,TLSv1.2
         xpack.security.authc.anonymous.roles: fluentd
+        xpack.security.authc.token.enabled: true
+        xpack.security.authc.realms.oidc.dex:
+          order: 0
+          rp.client_id: "Kubernetes"
+          rp.response_type: code
+          rp.redirect_uri: "https://kibana.{{ .domain }}/api/security/oidc/callback"
+          op.issuer: "https://dex.{{ .domain }}"
+          op.authorization_endpoint: "https://dex.{{ .domain }}/oauth2/v1/authorize"
+          op.token_endpoint: "https://dex.{{ .domain }}/oauth2/v1/token"
+          op.jwkset_path: "https://dex.{{ .domain }}/keys"
+          op.userinfo_endpoint: "https://dex.{{ .domain }}/oauth2/v1/userinfo"
+          op.endsession_endpoint: "https://dex.{{ .domain }}/oauth2/v1/logout"
+          rp.post_logout_redirect_uri: "https://kibana.{{ .domain }}/security/logged_out"
+          claims.principal: sub
+          claims.groups: "groups"
       podTemplate:
         spec:
           containers:
@@ -47,16 +64,32 @@ spec:
             storageClassName: {{.elasticsearch.persistence.storageClass}}
       {{- end}}
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: elasticsearch-oidc-config
+  namespace: eck
+type: Opaque
+data:
+  xpack.security.authc.realms.oidc.dex.rp.client_secret: {{ "ZXhhbXBsZS1hcHAtc2VjcmV0" | base64.Encode }}
+---
 apiVersion: kibana.k8s.elastic.co/v1
 kind: Kibana
 metadata:
   name: logs
   namespace: eck
 spec:
-  version: 7.6.0
+  version: 7.9.1
   count: 1
   config:
     elasticsearch.ssl.certificateAuthorities: /usr/share/kibana/config/elasticsearch-certs/ca.crt
+    xpack.security.authc.providers:
+      oidc.Dex:
+        order: 0
+        realm: "dex"
+      # Basic Access is required e.g. to utilize the Kibana API for automated shard allocation with elastic user.
+      basic.basic1:
+        order: 1
   elasticsearchRef:
     name: logs
 ---
